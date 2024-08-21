@@ -1,0 +1,44 @@
+name: Take Screenshot
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  take-screenshot:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js environment
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Puppeteer
+      run: npm install puppeteer
+
+    - name: Take screenshot of lpu.in
+      run: |
+        node -e "const puppeteer = require('puppeteer'); \
+        (async () => { \
+          const browser = await puppeteer.launch(); \
+          const page = await browser.newPage(); \
+          await page.goto('https://www.lpu.in'); \
+          await page.screenshot({ path: 'lpu_screenshot.png', fullPage: true }); \
+          await browser.close(); \
+        })();"
+
+    - name: Commit screenshot to the repository
+      run: |
+        git config --local user.name "github-actions"
+        git config --local user.email "actions@github.com"
+        git add lpu_screenshot.png
+        git commit -m "Add screenshot of lpu.in"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
